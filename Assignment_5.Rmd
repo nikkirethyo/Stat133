@@ -1,0 +1,95 @@
+---
+title: "Assignment 5"
+author: "Nichole Rethmeier"
+date: "2/17/2016"
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+```{r eval = TRUE, echo = FALSE}
+download.file("http://tiny.cc/dcf/ScorecardSmall.Rda", destfile = "ScorecardSmall.Rda")
+load("ScorecardSmall.Rda")
+```
+
+First, we want to filter out universities that are not public or private (where CONTROL is 3), and also universities that have less that 1000 undergrads (where CCSIZESET is 1, 6, 7, 8) and then select the relevent variables from ScorecardSmall. 
+
+```{r eval = TRUE, echo = TRUE}
+NewScorecardSmall <- ScorecardSmall %>% 
+  filter(CONTROL == 1 | CONTROL == 2) %>% 
+  filter (CCSIZSET == 2 | CCSIZSET == 3 | CCSIZSET == 4 | CCSIZSET == 5 | CCSIZSET == 9 | CCSIZSET == 10 | CCSIZSET == 11 | CCSIZSET == 12 | CCSIZSET == 13 | CCSIZSET == 14 | CCSIZSET == 15 | CCSIZSET == 16 | CCSIZSET == 17 | CCSIZSET == 18) %>% 
+  select(CONTROL, INSTNM, ADM_RATE, CCSIZSET, AVGFACSAL, TUITFTE, NPT41_PUB, NPT42_PUB, NPT43_PUB, NPT44_PUB, NPT45_PUB, NPT41_PRIV, NPT42_PRIV, NPT43_PRIV, NPT44_PRIV, NPT45_PRIV) 
+```
+
+Next, we want to put it from wide form into narrow form: 
+
+```{r eval = TRUE, echo = TRUE}
+NarrowScorecardSmall <- NewScorecardSmall %>% 
+  gather(key = case, value = cost, NPT41_PUB:NPT45_PRIV)
+```
+
+To get our final glyph ready data table, we join the two dataframes and filter out Q1, Q3, Q5 considering this is all our graph needs.
+
+```{r eval = TRUE, echo = TRUE}
+NPT4_names <- data_frame("AvgCostbyIncome" = c("NPT41_PUB", "NPT42_PUB", "NPT43_PUB", "NPT44_PUB", "NPT45_PUB", "NPT41_PRIV", "NPT42_PRIV", "NPT43_PRIV", "NPT44_PRIV", "NPT45_PRIV"), "IncomeGroup" = c("Q1", "Q2", "Q3", "Q4", "Q5", "Q1", "Q2", "Q3", "Q4", "Q5"))
+
+FinalScorecard <- NarrowScorecardSmall %>% 
+  inner_join(NPT4_names, by=c("case" = "AvgCostbyIncome")) %>% 
+  filter (IncomeGroup == "Q1" | IncomeGroup == "Q3" | IncomeGroup == "Q5") 
+```  
+
+To change it so that we have Private schools (2) above Public schools (1) in our graph, we must use the following:
+
+```{r eval = TRUE, echo = TRUE}
+FinalScorecard$CONTROL <- factor(FinalScorecard$CONTROL, levels = c("2", "1"), labels = c("Private", "Public"))
+```
+
+Now we develop the theme of the graph, making the texts larger and changing the backgrounds and grids. 
+
+```{r eval = TRUE, echo = TRUE}
+ScorecardTheme <- theme(plot.title = element_text(size = 30), 
+                  axis.title.x = element_text(size = 20), 
+                  axis.title.y = element_text(size = 20), 
+                  strip.text.x = element_text(size = 15), 
+                  strip.text.y = element_text(size = 15), 
+                  panel.grid.major = element_line(colour = "grey"), 
+                  panel.grid.minor = element_blank(), 
+                  panel.background = element_rect(fill = "white"),
+                  plot.background = element_rect(fill = "grey90"), 
+                  axis.text = element_text(size = 15)) 
+```
+
+
+Finally, we create the plot using the following and add our saved theme at the end to give us the style we want. 
+
+```{r eval = FALSE, echo = TRUE}
+ggplot(FinalScorecard, aes(x = ADM_RATE,y = cost)) 
++ geom_point(col = "blue", alpha = 0.5, size = 2) 
++ facet_grid(CONTROL ~ IncomeGroup) 
++ geom_smooth(se = FALSE, col = "red") 
++ labs(title = "Score Card",x = "Admission Rate, %",y = "Net Cost Per Year, $'000") 
++ scale_y_continuous(breaks = c(0, 10000, 20000, 30000, 40000, 50000), limit = c(0, 50000), labels = c("0", "10", "20", "30", "40", "50")) 
++ scale_x_continuous(labels = c("0", "25", "50", "75", "100")) 
++ ScorecardTheme 
+``` 
+
+```{r eval = TRUE, echo = FALSE}
+include_graphics("/Users/somorjai/Desktop/School/Spring 16/Stats 133/Assignments/Assignment 5/Assignment 5 Graph.png")
+```
+
+
+
+
+
+

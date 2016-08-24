@@ -1,0 +1,118 @@
+---
+title: "Assignment 4"
+author: "Nichole Rethmeier"
+date: "2/10/2016"
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+```{r eval = TRUE, echo = FALSE}
+library(DataComputing)
+library(mosaicData)
+```
+1. We create the data table DailyBirths and create the births versus dates scatter graph using the following: 
+```{r eval = TRUE, echo = TRUE}
+DailyBirths <- Birthdays %>% 
+  group_by(date) %>% 
+  summarise(total = sum(births)) 
+ggplot(DailyBirths, aes(x = date, y = total)) + geom_point() 
+```
+
+2. a. To look at the births across each week, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+WeeklyBirths <- Birthdays %>% 
+  mutate(week = week(date)) %>% 
+  group_by(week) %>% 
+  summarise(total = sum(births))
+ggplot(WeeklyBirths, aes(x = week, y = total)) + geom_point()
+```
+
+b. To look at births across each month, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+MonthlyBirths <- Birthdays %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month) %>% 
+  summarise(total = sum(births))
+ggplot(MonthlyBirths, aes(x = month, y = total)) + geom_point()
+```
+
+c. To look at births across each Julian day, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+JulianDayBirths <- Birthdays %>% 
+  mutate(day = yday(date)) %>% 
+  group_by(day) %>% 
+  summarise(total = sum(births))
+ggplot(JulianDayBirths, aes(x = day, y = total)) + geom_point()
+```
+
+3. To examine patterns within the week, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+WeekdayBirths <- Birthdays %>% 
+  mutate(weekday = wday(date)) %>% 
+  group_by(weekday) %>% 
+  summarise(total = sum(births))
+ggplot(WeekdayBirths, aes(x = weekday, y = total)) + geom_point()
+```
+
+4. To create and plot MyTwoYears, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+MyTwoYears <- Birthdays %>% 
+  filter(year == 1980 | year == 1981) %>%
+  group_by(date) %>% 
+  summarise(total = sum(births)) 
+ggplot(MyTwoYears, aes(x = date, y = total)) + geom_point(aes(color = wday(date, label = TRUE)))
+```
+
+From the above graph, the pattern that is most obvious is that substantially fewer births happen on the weekends, namely Saturday and Sunday. This is probably because when expecting, stress can induce labor, and people are generally more stressed during the work week. 
+
+5. 
+```{r eval = TRUE, echo = TRUE}
+Holidays <- read.csv("http://tiny.cc/dcf/US-Holidays.csv") %>%
+ mutate(date = lubridate::dmy(date))
+```
+
+6. 
+a. To draw a vertical bar at each date that' a holiday, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+TwoYearHolidays <- Holidays %>% 
+  filter(year == 1980 | year == 1981) %>% 
+  group_by(date) 
+TwoYearsGraph <- ggplot(MyTwoYears, aes(x = date, y = total)) + geom_point(aes(color = wday(date, label = TRUE))) + geom_vline(data = TwoYearHolidays, aes(xintercept = as.numeric(date), color = wday(date, label = TRUE)))
+```
+
+b. Then using the graph we created above, we add labels to get our final graph using the following: 
+```{r eval = TRUE, echo = TRUE}
+TwoYearsGraph + geom_text(data = TwoYearHolidays, aes(x = date, y=10000, label=holiday, angle = 90))
+```
+
+7. To join the tables MyTwoYears and Holidays, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+JoinHolidays <- MyTwoYears %>% 
+  left_join(TwoYearHolidays, by = c("date" = "date"))
+```
+
+8. To mutate the holiday column, we use the following: 
+```{r eval = TRUE, echo = TRUE}
+MutateHoliday <- JoinHolidays %>%
+  mutate(is_holiday = ifelse(is.na(holiday),"no","yes")) 
+```
+
+9. To plot the new MyTwoYears graph, we use the following: 
+
+```{r eval = TRUE, echo = FALSE}
+ggplot(MutateHoliday, aes(x=date, y=total)) + geom_point(aes(color = wday(date, label = TRUE), size = is_holiday))
+```
+
+It would appear that less babies are also born during the holidays as well, where day of the week plays a less significant role. 

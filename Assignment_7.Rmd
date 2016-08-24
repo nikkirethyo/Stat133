@@ -1,0 +1,124 @@
+---
+title: "Assignment 7"
+author: "Nichole Rethmeier"
+date: "3/3/2016"
+output: 
+  html_document:
+    fig_height: 5
+    fig_width: 7
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+```{r echo = FALSE}
+Stations <- mosaic::read.file("http://tiny.cc/dcf/DC-Stations.csv")
+data_site <- "http://tiny.cc/dcf/2014-Q4-Trips-History-Data-Small.rds"
+Trips <- readRDS(gzcon(url(data_site)))
+
+#install.packages("dplyr")
+
+source("http://tiny.cc/dcf/haversine.R")
+``` 
+
+***Time of Day*** 
+
+**1.** The density plot of the events versus the date is given by: 
+```{r} 
+Trips %>% 
+  ggplot(aes(x = sdate)) + geom_density()
+```
+
+**2.** We not want a density plot against the time of day, given by: 
+```{r} 
+Trips %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  ggplot(aes(x = time_of_day)) + geom_density() 
+```
+
+**3.** To facet by the day of the week, we use the following: 
+```{r}
+Trips %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(weekday = lubridate::wday(sdate, label = TRUE)) %>%
+  ggplot(aes(x = time_of_day)) + geom_density() + facet_wrap("weekday") + scale_x_continuous(limits = c(0,24))
+```
+
+**4.** Now we change the fill aesthetic and rid of the outline for the density function: 
+```{r} 
+Trips %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(weekday = lubridate::wday(sdate, label = TRUE)) %>%
+  ggplot(aes(x = time_of_day, fill = client)) + geom_density(alpha = 0.5, color = NA) + facet_wrap("weekday") + scale_x_continuous(limits = c(0,24))
+```
+
+**5.** Changing the argument position, we find that the second graph shows an interesting story because we can see that registered clients are much more inclined to rent the bikes than casual clients. 
+```{r}
+Trips %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(weekday = lubridate::wday(sdate, label = TRUE)) %>%
+  ggplot(aes(x = time_of_day, fill = client)) + geom_density(alpha = 0.5, color = NA, position = position_stack()) + facet_wrap("weekday") + scale_x_continuous(limits = c(0,24))
+```
+
+**6.** You get a better understanding of the data when you facet by wday and fill with client than you would the other way around. To change the facets from the day of the week to weekdays versus weekends, we use the following: 
+```{r} 
+Trips %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(wday = ifelse(lubridate::wday(sdate) %in% c(1,7), "weekend", "weekday")) %>%
+  ggplot(aes(x = time_of_day, fill = client)) + geom_density(alpha = 0.5, color = NA, position = position_stack()) + facet_wrap("wday") + scale_x_continuous(limits = c(0,24))
+```
+
+***Trip Distance***
+
+**1.** To make two copies of the Stations data, we do as follows: 
+
+```{r}
+Left <- Stations %>% 
+  select(name, lat, long) %>% 
+  dplyr::rename(sstation = name) 
+
+Right <- Stations %>% 
+  select(name, lat, long) %>% 
+  dplyr::rename(estation = name, lat2 = lat, long2 = long)
+```
+
+**2.** Now joining our two copies, we get the following: 
+```{r}
+JoinedStations <- Left %>% merge(Right, all = TRUE)
+```
+
+**3.** Using our JoinedStations data table, we add a distance variable as follows: 
+```{r}
+JoinedStations <- JoinedStations %>% 
+  mutate(distance = haversine(lat, long, lat2, long2)) %>% 
+  select(sstation, estation, distance)
+
+#Finally, we join our new data table with Trips using 
+
+Trips_and_Distances <- Trips %>% merge(JoinedStations)
+```
+
+***Distrubutions of Distances***
+
+**1.** Now we  make a density plot using our new table, with distance broken down by weekday versus weekend. 
+```{r}
+Trips_and_Distances   %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(wday = ifelse(lubridate::wday(sdate) %in% c(1,7), "weekend", "weekday")) %>%
+  ggplot(aes(x = distance, fill = client)) + geom_density(alpha = 0.5, color = NA, position = position_stack()) + facet_wrap("wday") 
+```
+
+**2.** Now, we show this in a compact way with a violin or box and whiskers plot. 
+```{r}
+Trips_and_Distances   %>% 
+  mutate(time_of_day = lubridate::hour(sdate) + lubridate::minute(sdate) / 60) %>% 
+  mutate(wday = ifelse(lubridate::wday(sdate) %in% c(1,7), "weekend", "weekday")) %>%
+  ggplot(aes(x = time_of_day, y = distance)) + facet_grid(client ~ wday) + geom_boxplot(aes(group = lubridate::hour(sdate), outlier.size = 1)) + geom_smooth() + scale_y_continuous(limits = c(0,5)) + labs(title = "Hour vs. Distance", x = "Hour", y = "Distance") + stat_smooth() 
+```

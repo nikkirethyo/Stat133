@@ -1,0 +1,147 @@
+---
+title: "Assignment 6"
+author: "Nichole Rethmeier"
+date: "2/26/2016"
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+1. First, we write a function that returns whether a year is a leap year or not:
+
+```{r eval = TRUE, echo = TRUE}
+leapyear <- function(year) { 
+  return((year %% 4 == 0 & year %% 100 != 0) | (year %% 400 == 0))
+  }
+```
+
+Next, we write a function to calculate how many leap years I've lived through: 
+
+```{r eval = TRUE, echo = TRUE}
+myleapyears <- function(birthyear) {
+    count <- sum(leapyear(birthyear:2016) == TRUE)
+    return(count) 
+}
+myleapyears(1995)
+```
+
+2. Part a:
+```{r eval = TRUE, echo = TRUE} 
+x <- runif(100, -1, 1)
+y <- runif(100, -1, 1)
+
+#Create the points into a data table to be plotted later
+data_points <- data.frame(x,y) 
+inside_circle <- data.frame((data_points[,1]^2 + data_points[,2]^2) <= 1)
+
+#Calculate the number of points that are in the circle, where inside_circle is TRUE
+total_inside <- sum(inside_circle[,1] == TRUE)
+total_inside
+
+#To calculate the proportion, we take 
+proportion <- total_inside/100 
+proportion 
+
+#Now, we plot the points that are either in or outside of the circle 
+ggplot(data_points, aes(x = x, y = y)) + geom_point(aes(color = inside_circle[,1]))
+
+#To calculate the area of the square over which we're sampling and approximate the circle area
+circle_area <- proportion * 4
+
+```
+
+Part b:
+```{r eval = TRUE, echo = TRUE}
+graphcircle <- function(n=100, plotit=TRUE) {
+  x <- runif(n, -1, 1) 
+  y <- runif(n, -1, 1)
+  data_points <- data.frame(x,y) 
+  inside_circle <- data.frame((data_points[,1]^2 + data_points[,2]^2) <= 1)
+  total_inside <- sum(inside_circle[,1] == TRUE)
+  proportion <- total_inside/100 
+  circle_area <- proportion * 4
+  if (plotit) {
+    ggplot(data_points, aes(x = x, y = y)) + geom_point(aes(color = inside_circle[,1]))
+  }
+  return(circle_area)
+}
+```
+
+Part c: 
+```{r eval = TRUE, echo = TRUE}
+circle_area_50 <- replicate(100, graphcircle(50, FALSE))
+circle_area_500 <- replicate(100, graphcircle(500, FALSE))
+```
+
+Part d: 
+```{r eval = TRUE, echo = TRUE}
+vec_length <- c(replicate(100, 50), replicate(100, 500))
+hist_data <- data.frame(areas = c(circle_area_50, circle_area_500), length = vec_length )
+ggplot(hist_data, aes(x = areas)) + geom_histogram(binwidth = .02) + facet_wrap("length", scales = "free") + theme(strip.text.x = element_text(size = 15)) + labs(title = "Avg Circle Area", x = "Average Areas", y = "Count") 
+
+```
+
+3. Part a: 
+```{r eval = TRUE, echo = TRUE}
+
+newtonsmethod <- function(guess, tolerance = 0.00001){
+  fx <- guess^3 + 2*guess^2 - 7
+  while(abs(fx) > 0.00001){
+    fpx <- 3*guess^2 + 4*guess
+    guess <- guess - fx/fpx
+    fx <- guess^3 + 2*guess^2 - 7
+}
+  guess 
+}
+
+```
+
+
+Part b: 
+```{r eval = TRUE, echo = TRUE}
+fx <- function(x) {
+  return(x^3 + 2*x^2 - 7)
+}
+
+fprimex <- function(x) {
+  return(3*x^2 + 4*x)
+}
+```
+
+Part c: 
+```{r eval = FALSE, echo = TRUE}
+
+newtonsmethod2 <- function(guess,fx = fx, fpx = fprimex, tolerance = 0.00001){
+  while(abs(fx(guess)) > 0.00001){
+    fpx <- fpx(guess)
+    guess <- guess - fx(guess)/fpx
+    fx <- fx(guess)
+}
+  guess 
+}
+
+```
+
+Part d: 
+```{r eval = FALSE, echo = TRUE}
+#We define new functions 
+fx <- function(x){
+  x^2
+}
+fpx <- function(x){
+  2*x
+}
+
+newtonsmethod2(-4, fx, fpx)
+
+```

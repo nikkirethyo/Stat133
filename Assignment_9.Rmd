@@ -1,0 +1,125 @@
+---
+title: "Assignment 9"
+author: "Nichole Rethmeier"
+date: "4/3/2016"
+output: 
+  html_document:
+    fig_height: 5
+    fig_width: 7
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+```{r echo = F}
+library(rvest)
+library(lubridate)
+page <- "http://en.wikipedia.org/wiki/List_of_nuclear_reactors"
+xpath <- '//*[@id="mw-content-text"]/table' 
+table_list <- page %>%
+  read_html() %>%
+  html_nodes(xpath = xpath) %>%
+  html_table(fill = TRUE)
+```
+
+**1.** Starting off with head(table_list[[5]]) we see that this table matches Austria's nuclear reactprs and from there can deduce that Japan's table is the 23rd in the list. 
+
+```{r}
+Japan <- table_list[[23]]
+names(Japan)
+```
+
+**2.** To rename the columns of the table to appropriate names, we use the following: 
+
+```{r}
+Japan_names <- c("Name", "Reactor No.", "Type", "Model", "Status", "Net Capacity in MW", "Gross Capacity in MW", "Construction Start Date", "Commerical Operation Date", "Closure")
+names(Japan) <- Japan_names
+Japan <- Japan %>% filter(row_number() != 1)
+```
+
+**A Quick Visualization** 
+
+To produce this graph, we use: 
+
+```{r}
+Japan %>% ggplot(aes(x=dmy(`Construction Start Date`),y=`Net Capacity in MW`, color = Type)) + geom_point() +labs(x="Construction Start Date")
+```
+
+**Construction Delays** 
+
+```{r}
+Japan %>% 
+  mutate(Start = lubridate::dmy(`Construction Start Date`)) %>%
+  mutate(End = lubridate::dmy(`Commerical Operation Date`)) %>%
+  ggplot(aes(x=Start,y=Name)) + geom_segment(aes(x=Start,y=Name,xend=End, yend=Name))
+
+```
+
+**PART 2** 
+
+**1.** 
+```{r eval=F}
+mkdir lifespan
+cd lifespan
+```
+
+**2.** 
+```{r eval=F}
+cd .. #this takes us back to home directory 
+cd desktop #changes director to desktop where files are located 
+mv lifeexpectancy.csv lifespan/lifeexpectancy.csv #moves lifeexpectancy.csv into lifespan directory 
+mv makemaps-1.R lifespan/makemaps-1.R #moves makemaps-1.R into lifespan directory 
+cd .. #goes back to home directory 
+cd lifespan #changes to lifespan directory 
+ls #will list the contents of lifespan, the two files you just placed there 
+```
+
+**3.**
+
+```{r eval=F}
+less lifeexpectancy.csv
+```
+
+**4.** 
+
+The countries are contained in the first column, and we want to know how many rows (lines) there are. 
+
+```{r eval=F}
+cut -f 1 -d "," lifeexpectancy.csv | wc -l
+```
+
+**5.**
+
+Doing the math we find that the corresponding column numbers are 1, 152, 177, and 202. 
+
+**6.** 
+
+To keep only the columns for these years, we use the following: 
+
+```{r eval=F}
+cut -f 1,152,177,202 -d "," lifeexpectancy.csv | head
+```
+
+**7.** 
+
+In order to clean the file and rename it to lifeexpectancy.clean.csv, we use the following command. 
+
+```{r eval=F}
+cut -f 1,152,177,202 -d "," lifeexpectancy.csv | head | egrep "[0-9]" > lifeexpectancy.clean.csv
+```
+
+**8.** 
+
+```{r eval=F}
+R 
+install.packages("maps")
+install.packages("fields")
+Ctrl D
+```
