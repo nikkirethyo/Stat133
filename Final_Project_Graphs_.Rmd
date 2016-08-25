@@ -1,0 +1,193 @@
+---
+title: "Final Project Graphs"
+author: "Nichole Rethmeier, Jared Lux, Allyson O'Malley, Leslie Jeong"
+date: ""
+output: 
+  html_document:
+    fig_height: 7
+    fig_width: 9
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+
+```{r include= F}
+#install.packages("quantmod")
+library(quantmod)
+#install.packages("tseries")
+library(tseries)
+
+```
+
+
+```{r, warning=F}
+  
+Theme <- theme(plot.title = element_text(size = 30), 
+                  axis.title.x = element_text(size = 20), 
+                  axis.title.y = element_text(size = 20), 
+                  strip.text.x = element_text(size = 15), 
+                  strip.text.y = element_text(size = 15), 
+                  panel.grid.major = element_line(colour = "grey"), 
+                  panel.grid.minor = element_blank(), 
+                  panel.background = element_rect(fill = "white"),
+                  plot.background = element_rect(fill = "grey90"), 
+                  axis.text = element_text(size = 10)) 
+
+
+stockPlot <- function(name, date, type, region) {
+  start <- as.character(as.Date(date) - 30)
+  end <- as.Date(date) + 30
+  if (end > as.Date("2016-05-01")) {
+    end <- "2016-05-01"
+  } else {
+    end <- as.character(end)
+  }
+  
+  retail <- as.data.frame(get.hist.quote(instrument = "IYC", start = start , end = end, quote = "Close", provider = "yahoo", method = NULL, origin = "1899-12-30", compression = "d", retclass = "zoo"))
+  retail <- retail %>%
+    mutate(Date = as.Date(rownames(retail))) %>% 
+    rename(Retail = Close)
+  
+
+  tech <- as.data.frame(get.hist.quote(instrument = "XLK", start = start , end = end, quote = "Close", provider = "yahoo", method = NULL, origin = "1899-12-30", compression = "d", retclass = "zoo"))
+  tech <- tech %>%
+    mutate(Date = as.Date(rownames(tech))) %>% 
+    rename(Tech = Close)
+  
+  energy <- as.data.frame(get.hist.quote(instrument = "XLE", start = start , end = end, quote = "Close", provider = "yahoo", method = NULL, origin = "1899-12-30", compression = "d", retclass = "zoo"))
+  energy <- energy %>%
+    mutate(Date = as.Date(rownames(energy))) %>% 
+    rename(Energy = Close)
+
+#Combine the info fo retail, tech, and energy into one data frame 
+
+disaster <- energy %>%
+  inner_join(retail, "Date") %>%
+  inner_join(tech, "Date")
+
+#Change our newly made dataframe from wide to narrow format and reorder the columns 
+
+disaster <- disaster %>% gather(Industry, Close, -Date) 
+
+disaster <- disaster %>% 
+  mutate(Date = as.integer(Date - as.Date(date))) %>%
+  group_by(Industry) %>% 
+  mutate(Value = Close/sum(Close)*1000) %>% ungroup() %>%
+  group_by(Date) %>% 
+  summarise(Value = mean(Value)) %>%
+  mutate(name = name, type=type, region = region)
+
+#Use theme below for all of our graphs so they are uniform
+
+labels <- data.frame(Date = 0, Value = mean(disaster$Value)-0.1)
+print(ggplot(disaster, aes(x=Date,y=Value)) + geom_line() + geom_vline(xintercept = 0, color="black")  + labs(title = name) + Theme + geom_text(data = labels, label = type, color = "black", size = 5))
+
+return(disaster)
+}
+```  
+  
+  
+  
+
+
+**DOMESTIC NATURAL DISASTERS**
+
+```{r warning=F, tidy=T}
+#2012 Hurricane Sandy 
+
+HS <- stockPlot("Hurricane Sandy 2012", "2012-10-26", "Hurricane", "domestic")
+```
+
+
+```{r warning=F, tidy=T}
+#2009 Hurricane Ike
+
+HI <- stockPlot("Hurricane Ike 2009", "2008-09-01", "Hurricane", "domestic")
+```
+
+
+```{r warning=F, tidy=T}
+
+#2016 US Blizzard
+
+USB <- stockPlot("US Blizzard 2016", "2016-01-21", "Blizzard", "domestic")
+```
+
+```{r warning=F, tidy=T}
+
+#2011 Super Outbreak
+
+SO <- stockPlot("Super Outbreak 2011", "2011-04-25", "Tornadoes", "domestic")
+```
+
+
+**INTERNATIONAL NATURAL DISASTERS**
+
+
+```{r warning=F}
+#2011 Japan Quake
+
+JQ <- stockPlot("Japan Earthquake 2011", "2011-04-11", "Earthquake", "international")
+```
+
+```{r warning=F}
+#2010 Haiti Earthquake
+
+HQ <- stockPlot("Haiti Earthquake 2010", "2010-01-12", "Earthquake", "international")
+```
+
+
+```{r warning=F}
+#2005 Hurricane Katrina
+
+HK <- stockPlot("Hurricane Katrina 2005", "2005-08-23", "Hurricane", "international")
+```
+
+
+```{r warning=F}
+###Tsunami December 26, 2004 Earthquake in Indian Ocean
+
+TS <- stockPlot("Tsunami Indian Ocean 2004", "2004-12-26", "Tsunami", "international")
+```
+
+
+```{r warning=F}
+######Typhoon Haiyan - Nov 8 2013
+
+TH <- stockPlot("Typhoon Haiyan 2013", "2013-11-08", "Typhoon", "international")
+```
+
+
+```{r warning=F}
+
+####October 8, 2005 Earthquake in Kashmir
+
+KS <- stockPlot("Kashmir Earthquake 2005", "2015-10-08", "Earthquake", "international")
+
+```
+
+
+
+```{r warning=F}
+disastersList <- list(HS, HI, USB, SO, JQ, HQ, HK, TS, KS)
+
+disasters <- disastersList[[1]]
+for (i in 2:length(disastersList)) {
+  disasters <- disasters %>% full_join(disastersList[[i]])
+}
+
+disasters %>% ggplot(aes(x=Date, y=Value, col=name)) + facet_wrap(~region) + geom_line() + geom_vline(xintercept = 0, color="black")
+ 
+d <- disasters %>% mutate(time=ifelse(Date > 0, "1", "0")) 
+
+d %>% group_by(name, time, region) %>% summarise(avg = mean(Value)) %>% 
+  ggplot(aes(x=time, y=avg, col=name, group=name)) + facet_wrap(~region) + geom_line()
+```
