@@ -1,0 +1,149 @@
+---
+title: "Lab 8"
+author: "Nichole Rethmeier"
+date: "3/10/2016"
+output: 
+  html_document:
+    fig_height: 5
+    fig_width: 7
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+**1.** The vectorized calculation of this loop is the following: 
+```{r}
+vec = 1:50
+vec[vec < 50]^2
+```
+
+**2.** 
+```{r}
+#a. The vector x will contain 0, 2, 4, 6, 8 from the following command
+x <- seq(from = 0, to = 8, by = 2)
+#b. This will make the values less than 4 of x equal to NA, thus you will have NA, NA, 4, 6, 8 
+x[x < 4] <- NA 
+#c. This will make all values of x equal to 0, giving you 0, 0, 0, 0, 0
+x[] <- 0 
+#d. This will make x a single value, rather than a vector, giving you just 0 
+x <- 0
+```
+
+**3.** The lapply function in R operates on *vectors* and returns *lists*. 
+
+**4.** 
+a. Creating a vector containing the sum of squared entries in each row of m, using a for loop, we have: 
+```{r echo = FALSE}
+set.seed(1337)
+m <- matrix(runif(15000, -3, 3), ncol = 3)
+```
+
+```{r}
+m.ssq.loop <- c()
+for(i in 1:nrow(m)){
+    m.ssq.loop <- c(m.ssq.loop, sum(m[i,]^2))
+}
+
+head(m.ssq.loop)
+```
+
+b. Now, using the apply function instead, we have the following: 
+```{r}
+m.ssq.apply <- apply(m, 1, function(x){sum(x^2)})
+
+head(m.ssq.apply)
+```
+
+c. For the sanity check, we simply use the identical function: 
+```{r}
+identical(m.ssq.loop, m.ssq.apply)
+```
+
+**5.** 
+```{r echo = FALSE}
+Year <- c(2000, 2001)
+Algeria <- c(7, 9)
+Brazil <- c(12, NA)
+Columbia <- c(16, 18)
+
+table1<- data.frame(Year, Algeria, Brazil, Columbia)
+```
+a. To wrangle the data from table1 into the object table2, we use the following: 
+```{r}
+#To take it from wide to narrow format
+table2 <- table1 %>%
+  gather(Country, Value, Algeria, Brazil, Columbia)
+#To reorder the columns 
+table2 <- table2[c("Country", "Year", "Value")]
+table2
+```
+
+b. Now, to wrangle table2 into table 3, we use the following:
+```{r}
+table3 <- table2 %>%
+  spread(Country, Value)
+
+table3 %>% mutate(Average = rowMeans(table3[,2:4], na.rm = TRUE))
+
+```
+
+**6.** 
+a. The glyphs in the Wage vs Education graph are points and the two lines as well. 
+
+b. The aesthetics for the points are the location, namely the x and y of the glyph, and the color of the point. For the lines, similarly the location and color are its aesthetics. 
+
+c. The variable sex is being mapped to the color aesthetic for both the points and lines and then the education level is being mapped to the x position and the wage level is being mapped to the y position for the glyphs. 
+
+d. The variables education and wage level are both quantitative, but the variable sex is qualitative. 
+
+e. The guides on this graph are the axes and then the legend for sex. 
+
+f. To reconstruct this graph, we use the following: 
+```{r}
+suppressWarnings(print(ggplot(CPS85, aes(x = educ, y = wage, color = sex)) + geom_point() + scale_y_continuous(limits = c(0,15)) + scale_x_continuous(limits = c(0,15)) + labs(title = "Wage vs. Education in CPS85") + theme(title = element_text(size = 20)) + geom_smooth(method = lm)))
+```
+
+**7.**
+a. To write a function that takes in a string and outputs a vector of single character elements, we use the following:
+```{r}
+my.string <- "ggplot2 is a data visualization package for the statistical programming language R"
+
+SplitChars <- function(string){
+  unlist(strsplit(string, ""))
+}
+
+SplitChars(my.string)
+```
+
+b. Now, we want to count the number of times an "a", "s", "R", or "r" appears in my.string: 
+```{r}
+
+count_asRr <- function(string){
+  count <- 0
+  for(letter in string){
+    if(letter == "a" | letter == "s" | letter == "R" | letter == "r"){
+      count <- count + 1
+    }
+  }
+  return(count)
+}
+
+count_asRr(SplitChars(my.string))
+
+```
+
+c. Now, we want to write a function Reverse which reverses the order of a vector of single characters:
+```{r}
+reverse <- function(character_vec){
+  rev(character_vec)
+}
+
+reverse(SplitChars(my.string))
+```

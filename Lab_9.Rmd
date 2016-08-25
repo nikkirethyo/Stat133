@@ -1,0 +1,57 @@
+---
+title: "Lab 9"
+author: "Nichole Rethmeier"
+date: "3/31/16"
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+
+**1.** To figure out the number of humans, we use the following command, which returns that there are 12 humans.
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | egrep human | cut -f 12 -d "," | uniq -c
+``` 
+
+**2.** To figure out the number of jedis, we use the following command, which returns that there are 6 jedi. 
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | egrep [^_]jedi | cut -f 11 -d "," | uniq -c
+```
+
+**3.** To return a list of the names of the jedis, we use the following command, which returns the names Anakin Skywalker, Luke Skywalker, Qui-Gon Jinn, Obi-Wan Kenobi, Yoda, and Dooku. 
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | egrep [^_]jedi | cut -f 1 -d "," 
+```
+
+**4.** Then to sort the names of jedis, we use: 
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | egrep [^_]jedi | cut -f 1 -d "," | sort
+```
+
+**5.** In order to find  the frequency of weapons, we use the following command, which tells us there are 5 blasters, 1 bowcaster, 1 force lightning, 7 lightsabers, 1 slugthrower, 1 spear, 4 unarmed. 
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | cut -f 13 -d "," | sort | uniq -c
+```
+
+**6.** In order to sort the above list, in order of ***decreasing*** frequencies, we use the command:
+
+```{r eval = F}
+head -21 stars.csv | tail -20 | cut -f 13 -d "," | sort | uniq -c | sort -n | sort -r
+```
+

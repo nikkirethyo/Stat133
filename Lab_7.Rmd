@@ -1,0 +1,83 @@
+---
+title: "Lab 7"
+author: "Nichole Rethmeier"
+date: "3/3/2016"
+output: 
+  html_document:
+    fig_height: 5
+    fig_width: 7
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+**1.** To convert the airquality data from wide format to narrow format, we use the following: 
+
+```{r}
+airquality_narrow <- airquality %>% 
+  gather(key = type, value = value, Ozone, Solar.R, Wind, Temp)
+head(airquality_narrow)
+```
+
+**2.** 
+```{r eval = FALSE}
+data %>% 
+  filter(V1 == "a") %>% #This will filter out cases (rows) based on the variable (column) V1 where its values are equal to a 
+  select(V2, V4) %>% #This will select the two variables (columns) V2 and V4 and create a new dataframe with only those two columns showing
+  gather(key = Apple, value = Banana, V2, V4) %>% #This will convert the data from wide format to narrow format, creating a column Apple and Banana containing the values for the two in V2, V4 
+  mutate(Apple = Banana) #This will replace the values stored in Apple with the ones stored in Banana 
+```
+
+Overall, your data frame will consist of an Apple column and a Banana column, where the values for each column are equivalent and consist only of cases where V1 is equal to a. 
+
+**3.** a. To write the function that taxes a vector and replaces components equal to -99 with NA, we use the following
+
+```{r}
+vector <- c(0,1,2,3,-99,4,5,-99)
+
+fix_missing_99 <- function(x){
+  for(i in 1:length(x)){
+    if(x[i] == (-99)){
+      x[i] <- NA
+    }
+  }
+  return(x)
+}
+
+fix_missing_99(vector)
+```
+
+b. Writing a function that replaces -99 in dataframes with NA, using our above function, we get: 
+
+```{r}
+dataframe <- data_frame("A"=c(0,1,2,3),"B"= c(0,-99,2,3),"C"= c(-99,1,2,-99))
+
+fix_missing_99_df <- function(dataframe){
+  for(i in 1:nrow(dataframe)){
+    dataframe[i, ] <- fix_missing_99(dataframe[i, ])
+  }
+  return(dataframe)
+}
+
+fix_missing_99_df(dataframe)
+```
+
+c. We can perform the function above using the appropriate apply function as follows:
+
+```{r}
+dataframe <- data_frame("A"=c(0,1,2,3),"B"= c(0,-99,2,3),"C"= c(-99,1,2,-99))
+
+dataframe %>% sapply(fix_missing_99)
+```
+
+**4.** To create the plot in ggplot, we use the following command: 
+```{r}
+ggplot(diamonds, aes(x = carat, y = price, color = cut)) + geom_point(size = 2) + facet_wrap("cut") + geom_smooth(color = "blue", se = FALSE) + labs(title = "Carat vs. Price") + theme(title = element_text(size = 15), strip.text.x = element_text(size = 10)) 
+```
