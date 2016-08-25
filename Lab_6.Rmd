@@ -15,32 +15,6 @@ includeSourceDocuments()
 <!-- Don't edit the material above this line -->
 
 
-### Conditional Expressions
-
-If-else statements are perhaps the simplest type of control flow structure:
-
-```{r}
-x <- -100 # Change this value to check if your code works
-if (x > 0) {
-  print("positive")
-} else {
-  print("not positive")
-}
-```
-
-Of course, the else is not necessary (if you don't want anything to occur otherwise), or you can chain multiple if-else statements:
-
-```{r}
-y <- 0 # Change this value to check if your code works
-if (y > 0) {
-  print("positive")
-} else if (y < 0) {
-  print("negative")
-} else {
-  print("zero?")
-}
-```
-
 
 __Your turn!__
 Write R code that will "squish" a number into the interval [0, 100], so that a number less than 0 is replaced by 0 and a number greater than 100 is replaced by 100.
@@ -75,18 +49,7 @@ repeat {
 }
 ```
 
-Often you will want to perform a loop until some condition is satisfied, or as long as a condition as satisfied. In that case, a while loop may be more appropriate.
 
-```{r}
-val_while <- 512 # Change this value!
-while (val_while %% 2 == 0) { # Continue the loop as long as val_while is even.
-  print(val_while)
-  val_while <- val_while / 2
-}
-print(val_while)
-```
-
-Notice that the while loop code is more compact (ignoring the print statements), since the stopping condition has been encoded in the loop itself.
 
 __Your turn!__
 Write R code which multiplies a positive number by 3 and adds 1 until the result is greater than 10000. For example, 2015 $\to$ 6046 $\to$ 18139. Write both a repeat loop and a while loop.
@@ -111,18 +74,6 @@ while (n_while < 10000) { # Replace FALSE with your stopping condition.
 print(n_while)
 ```
 
-Sometimes instead of performing an action until a condition is satisfied, you just want to perform it a specified number of times. In these cases, a for loop is appropriate.
-
-```{r}
-for (i in 1:10) { # Repeat 10 times.
-  print("Hello world!")
-}
-```
-```{r}
-for (i in 1:10) { # Repeat 10 times.
-  print(i+1)
-}
-```
 
 __Your turn again!__
 Write a for loop to add 1 to every element of a vector in place. In other words, at the end of the operation `vec` should change from (3, 1, 4) to (4, 2, 5).
@@ -142,16 +93,6 @@ print(vec)
 
 ### Basic Functions, with Control Flow Structures
 
-Often you will find that it is easier to begin writing code for a specific task, with specific variables, before generalizing the code into a function. In the example above, we saw the following code, which divides a positive integer by 2 until it becomes odd.
-
-```{r}
-x <- 898128000 # Example value
-while (x %% 2 == 0) {
-  print(x)
-  x <- x / 2
-}
-print(x)
-```
 
 __Your turn!__
 Now generalize the above code to create a function which performs the same operation without printing the intermediate steps. (You should change very little.)
@@ -225,20 +166,7 @@ h(6)        # Should return 8
 h(19)       # Should return 20
 h(27)       # Should return 111
 ```
-### Default Arguments
 
-As you probably know by now, many functions come with default arguments, which can be left unspecified without affecting the execution of the function.
-
-The following function attempts to compute the length of the hypotenuse of a right triangle, but will accept one or two leg lengths.
-
-```{r}
-pythagoras <- function(a, b = a) {
-  return(sqrt(a^2 + b^2))
-}
-
-pythagoras(3, 4)
-pythagoras(5)
-```
 
 __Your turn!__
 Write a function which adds together the elements of a vector raised to a certain power. Use a loop instead of vectorized operations. Include two arguments: ```vec``` and ```pow```. Give ```pow``` a default value of 2.
